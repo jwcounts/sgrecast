@@ -1,0 +1,14 @@
+{
+    "name": "jwcounts/sgrecast",
+    "description": "PHP SGRecast Integration",
+    "type": "project",
+    "require": {
+        "vlucas/phpdotenv": "^5.4"
+    },
+    "authors": [
+        {
+            "name": "Jared Counts",
+            "email": "asentenceismyname@gmail.com"
+        }
+    ]
+}
