@@ -22,7 +22,7 @@ class HPM_SGRecast {
 		];
 
 		if ( file_exists( 'auth/token.json' ) ) :
-			$this->jwt = json_decode( file_get_contents( 'auth/token.json' ), true );
+			$this->jwt = $this->token_check( json_decode( file_get_contents( 'auth/token.json' ), true ) );
 		else :
 			$this->jwt = $this->get_token();
 		endif;
@@ -47,6 +47,18 @@ class HPM_SGRecast {
 		return $response;
 	}
 
+	public function token_check( $token ) {
+		if ( !empty( $token['expires_in'] ) && !empty( $token['generated_at'] ) ) :
+			if ( ( $token['expires_in'] + $token['generated_at'] ) > time() ) :
+				return $token;
+			else :
+				return $this->refresh_token();
+			endif;
+		else :
+			return $this->get_token();
+		endif;
+	}
+
 	public function get_token() {
 		$opts = $this->options;
 		$response = $this->request(
@@ -62,8 +74,10 @@ class HPM_SGRecast {
 			[ 'Content-Type: multipart/form-data' ],
 			'POST'
 		);
-		file_put_contents( 'auth/token.json', $response );
-		return json_decode( $response, true );
+		$response_j = json_decode( $response, true );
+		$response_j['generated_at'] = time();
+		file_put_contents( 'auth/token.json', json_encode( $response_j ) );
+		return $response_j;
 	}
 
 	public function refresh_token() {
@@ -81,8 +95,10 @@ class HPM_SGRecast {
 			[ 'Content-Type: multipart/form-data' ],
 			'POST'
 		);
-		file_put_contents( 'auth/token.json', $response );
-		$this->jwt = json_decode( $response, true );
+		$response_j = json_decode( $response, true );
+		$response_j['generated_at'] = time();
+		file_put_contents( 'auth/token.json', json_encode( $response_j ) );
+		return $response_j;
 	}
 
 	public function list_podcasts() {
