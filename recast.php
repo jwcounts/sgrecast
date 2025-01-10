@@ -7,10 +7,6 @@ class HPM_SGRecast {
 	protected $jwt;
 
 	public function __construct() {
-		// define( 'HPM_SGRECAST_PLUGIN_DIR', plugin_dir_path(__FILE__) );
-		// define( 'HPM_SGRECAST_PLUGIN_URL', plugin_dir_url(__FILE__) );
-		// add_action( 'plugins_loaded', [ $this, 'init' ] );
-		// add_action( 'init', [ $this, 'create_type' ] );
 		$dotenv = Dotenv::createImmutable( __DIR__ );
 		$dotenv->load();
 		$this->options = [
@@ -21,11 +17,11 @@ class HPM_SGRecast {
 			'client_secret' => $_ENV['RECAST_CLIENT_SECRET']
 		];
 
-		if ( file_exists( 'auth/token.json' ) ) :
-			$this->jwt = $this->token_check( json_decode( file_get_contents( 'auth/token.json' ), true ) );
-		else :
+		if ( file_exists( __DIR__ . '/auth/token.json' ) ) {
+			$this->jwt = $this->token_check( json_decode( file_get_contents( __DIR__ . '/auth/token.json' ), true ) );
+		} else {
 			$this->jwt = $this->get_token();
-		endif;
+		}
 	}
 
 	public function request( $url, $postfields, $headers, $type ) {
@@ -41,6 +37,7 @@ class HPM_SGRecast {
 			CURLOPT_CUSTOMREQUEST => $type,
 			CURLOPT_POSTFIELDS => $postfields,
 			CURLOPT_HTTPHEADER => $headers,
+			CURLOPT_HEADER => false
 		]);
 		$response = curl_exec( $curl );
 		curl_close( $curl );
@@ -48,15 +45,15 @@ class HPM_SGRecast {
 	}
 
 	public function token_check( $token ) {
-		if ( !empty( $token['expires_in'] ) && !empty( $token['generated_at'] ) ) :
-			if ( ( $token['expires_in'] + $token['generated_at'] ) > time() ) :
+		if ( !empty( $token['expires_in'] ) && !empty( $token['generated_at'] ) ) {
+			if ( ( $token['expires_in'] + $token['generated_at'] ) > time() ) {
 				return $token;
-			else :
+			} else {
 				return $this->refresh_token();
-			endif;
-		else :
+			}
+		} else {
 			return $this->get_token();
-		endif;
+		}
 	}
 
 	public function get_token() {
@@ -104,51 +101,137 @@ class HPM_SGRecast {
 	public function list_podcasts() {
 		$opts = $this->options;
 		$token = $this->jwt;
-		$response = $this->request(
+		return $this->request(
 			$opts['api_root'] . '/api/v1/sgrecast/podcasts/',
 			[],
 			[ 'Content-Type: multipart/form-data', 'Authorization: Bearer ' . $token['access_token'] ],
 			'GET'
 		);
-		print_r( json_decode( $response, true ) );
 	}
 
 	public function get_podcasts_feeds() {
 		$opts = $this->options;
 		$token = $this->jwt;
-		$response = $this->request(
+		return $this->request(
 			$opts['api_root'] . '/api/v1/sgrecast/podcasts/feeds/',
 			[],
 			[ 'Content-Type: multipart/form-data', 'Authorization: Bearer ' . $token['access_token'] ],
 			'GET'
 		);
-		print_r( json_decode( $response, true ) );
 	}
 
 	public function get_podcast( $id ) {
 		$opts = $this->options;
 		$token = $this->jwt;
-		$response = $this->request(
+		return $this->request(
 			$opts['api_root'] . '/api/v1/sgrecast/podcasts/feeds/view/' . $id,
 			[],
 			[ 'Content-Type: multipart/form-data', 'Authorization: Bearer ' . $token['access_token'] ],
 			'GET'
 		);
-		print_r( json_decode( $response, true ) );
 	}
 
 	public function get_podcast_episodes( $id ) {
 		$opts = $this->options;
 		$token = $this->jwt;
-		$response = $this->request(
+		return $this->request(
 			$opts['api_root'] . '/api/v1/sgrecast/podcasts/feeds/episodes/' . $id,
 			[],
 			[ 'Content-Type: multipart/form-data', 'Authorization: Bearer ' . $token['access_token'] ],
 			'GET'
 		);
-		print_r( json_decode( $response, true ) );
+	}
+
+	public function get_list( $endpoint, $page = '1', $length = 25, $sort = 'createdAt', $order = 'desc' ) {
+		$opts = $this->options;
+		$token = $this->jwt;
+		$query = [
+			'page' => $page,
+			'length' => $length,
+			'sort' => $sort,
+			'order' => $order
+		];
+		return $this->request(
+			$opts['api_root'] . '/api/v1/' . $endpoint . '/?' . http_build_query( $query ),
+			[],
+			[ 'Content-Type: multipart/form-data', 'Authorization: Bearer ' . $token['access_token'] ],
+			'GET'
+		);
+	}
+
+	public function get_content_single( $id ) {
+		$opts = $this->options;
+		$token = $this->jwt;
+		return $this->request(
+			$opts['api_root'] . '/api/v1/sgrecast/content/view/' . $id,
+			[],
+			[ 'Content-Type: multipart/form-data', 'Authorization: Bearer ' . $token['access_token'] ],
+			'GET'
+		);
+	}
+	public function upload_podcast_episode( $podcast_id, $file ) {
+		$opts = $this->options;
+		$token = $this->jwt;
+		$body = [
+			"group" => "3",
+			"files[]" => "@" . $file,
+			"description" => "Example Newscast",
+			"podcasts[]" => $podcast_id,
+			"restart_broadcasts" => "1",
+			"name" => "SGRecast Test"
+		];
+		return $this->request(
+			$opts['api_root'] . '/api/v1/sgrecast/podcasts/add/episode',
+			$body,
+			[ 'Content-Type: application/form-data', 'Authorization: Bearer ' . $token['access_token'], 'Accepts: application/json' ],
+			'POST'
+		);
+	}
+	public function add_content( $file ) {
+		$opts = $this->options;
+		$token = $this->jwt;
+		$body = [
+			"group" => "6",
+			"files" => new \CurlFile($file, 'audio/mpeg', 'newscast-test.mp3'),
+			"description" => "Example Newscast",
+			"name" => "SGRecast Test"
+		];
+		return $this->request(
+			$opts['api_root'] . '/api/v1/sgrecast/podcasts/add/episode',
+			$body,
+			[ 'Content-Type: multipart/form-data', 'Authorization: Bearer ' . $token['access_token'] ],
+			'POST'
+		);
+	}
+
+	public function schedule_import() {
+		$opts = $this->options;
+		$token = $this->jwt;
+		$body = [
+			[
+				"name" => "Newscast Ingest Test",
+				"description" => "Here is an example file to be imported into your SGrecast system.",
+				"url" => "https://cdn.houstonpublicmedia.org/assets/newscast.mp3",
+				"pub_date" => "2025-01-09 16:54:00",
+				"custom_id" => "hpm-newscast-test"
+			]
+		];
+		return $this->request(
+			$opts['api_root'] . '/api/upload',
+			[ 'file' => json_encode( $body ) ],
+			[ 'Content-Type: application/json', 'Authorization: Bearer ' . $token['access_token'] ],
+			'POST'
+		);
+	}
+
+	public function output( $response ) {
+		echo( $response );
 	}
 }
 global $sgrecast;
 $sgrecast = new HPM_SGRecast();
-$sgrecast->get_podcast( 5 );
+$sgrecast->output(
+//	//$sgrecast->get_podcast( 5 )
+//	//$sgrecast->list_podcasts()
+	$sgrecast->upload_podcast_episode( 11, __DIR__ . '/newscast.mp3' )
+);

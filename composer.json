@@ -3,7 +3,7 @@
     "description": "PHP SGRecast Integration",
     "type": "project",
     "require": {
-        "vlucas/phpdotenv": "^5.4"
+        "vlucas/phpdotenv": ">5.4"
     },
     "authors": [
         {

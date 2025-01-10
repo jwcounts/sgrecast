@@ -1,6 +1,9 @@
 /vendor/
 .vscode/
+.idea
 .env
 auth/*
 !auth/.gitkeep
 composer.lock
+Platform*
+http-client.env.json

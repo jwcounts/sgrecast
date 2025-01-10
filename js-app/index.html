@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en-us">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1">
+		<title>Houston Public Media Mid-Roll App</title>
+		<link rel="icon" sizes="48x48" href="https://cdn.hpm.io/assets/images/favicon/icon-48.png">
+		<link rel="icon" sizes="96x96" href="https://cdn.hpm.io/assets/images/favicon/icon-96.png">
+		<link rel="icon" sizes="144x144" href="https://cdn.hpm.io/assets/images/favicon/icon-144.png">
+		<link rel="icon" sizes="192x192" href="https://cdn.hpm.io/assets/images/favicon/icon-192.png">
+		<link rel="icon" sizes="256x256" href="https://cdn.hpm.io/assets/images/favicon/icon-256.png">
+		<link rel="icon" sizes="384x384" href="https://cdn.hpm.io/assets/images/favicon/icon-384.png">
+		<link rel="icon" sizes="512x512" href="https://cdn.hpm.io/assets/images/favicon/icon-512.png">
+		<link rel="apple-touch-icon" sizes="57x57" href="https://cdn.hpm.io/assets/images/favicon/apple-touch-icon-57.png">
+		<link rel="apple-touch-icon" sizes="60x60" href="https://cdn.hpm.io/assets/images/favicon/apple-touch-icon-60.png">
+		<link rel="apple-touch-icon" sizes="72x72" href="https://cdn.hpm.io/assets/images/favicon/apple-touch-icon-72.png">
+		<link rel="apple-touch-icon" sizes="76x76" href="https://cdn.hpm.io/assets/images/favicon/apple-touch-icon-76.png">
+		<link rel="apple-touch-icon" sizes="114x114" href="https://cdn.hpm.io/assets/images/favicon/apple-touch-icon-114.png">
+		<link rel="apple-touch-icon" sizes="120x120" href="https://cdn.hpm.io/assets/images/favicon/apple-touch-icon-120.png">
+		<link rel="apple-touch-icon" sizes="152x152" href="https://cdn.hpm.io/assets/images/favicon/apple-touch-icon-152.png">
+		<link rel="apple-touch-icon" sizes="167x167" href="https://cdn.hpm.io/assets/images/favicon/apple-touch-icon-167.png">
+		<link rel="apple-touch-icon" sizes="180x180" href="https://cdn.hpm.io/assets/images/favicon/apple-touch-icon-180.png">
+		<link rel="mask-icon" href="https://cdn.hpm.io/assets/images/favicon/safari-pinned-tab.svg" color="#ff0000">
+		<meta name="msapplication-config" content="https://cdn.hpm.io/assets/images/favicon/config.xml" />
+		<link rel="manifest" href="https://cdn.hpm.io/assets/images/favicon/manifest.json">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+		<style>
+			.navbar-item > img {
+				margin-right: 0.75rem;
+			}
+			code {
+				padding: 1rem;
+				width: 100%;
+				display: block;
+				font-size: 1.5rem;
+			}
+		</style>
+	</head>
+	<body>
+		<nav class="navbar is-dark" role="navigation" aria-label="main navigation">
+			<div class="navbar-brand">
+				<a class="navbar-item" href="https://www.houstonpublicmedia.org/">
+					<img src="https://cdn.hpm.io/assets/images/favicon/icon-48.png" alt="Houston Public Media logo" /> Mid-Roll App
+				</a>
+			</div>
+		</nav>
+		<div class="container">
+			<section class="section">
+				<form id="timestamp" action="javascript:;" onsubmit="formSubmit(this)" class="box">
+					<div class="field is-horizontal">
+						<div class="field-label is-normal">
+							<label class="label">Mid-Roll Slot 1</label>
+						</div>
+						<div class="field-body">
+							<div class="field">
+								<p class="control"><input name="hours-1" class="input" type="number" min="0" max="9" placeholder="Hours" /></p>
+							</div>
+							<div class="field">
+								<p class="control"><input name="minutes-1" class="input" type="number" min="0" max="59" placeholder="Minutes" /></p>
+							</div>
+							<div class="field">
+								<p class="control"><input name="seconds-1" class="input" type="number" min="0" max="59" placeholder="Seconds" /></p>
+							</div>
+							<div class="field">
+								<p class="control"><input name="milliseconds-1" class="input" type="number" min="0" max="999" placeholder="Milliseconds" /></p>
+							</div>
+						</div>
+					</div>
+					<div class="field is-horizontal">
+						<div class="field-label is-normal">
+							<label class="label">Mid-Roll Slot 2</label>
+						</div>
+						<div class="field-body">
+							<div class="field">
+								<p class="control"><input name="hours-2" class="input" type="number" min="0" max="9" placeholder="Hours" /></p>
+							</div>
+							<div class="field">
+								<p class="control"><input name="minutes-2" class="input" type="number" min="0" max="59" placeholder="Minutes" /></p>
+							</div>
+							<div class="field">
+								<p class="control"><input name="seconds-2" class="input" type="number" min="0" max="59" placeholder="Seconds" /></p>
+							</div>
+							<div class="field">
+								<p class="control"><input name="milliseconds-2" class="input" type="number" min="0" max="999" placeholder="Milliseconds" /></p>
+							</div>
+						</div>
+					</div>
+					<div class="field is-horizontal">
+						<div class="field-label"></div>
+						<div class="field-body">
+							<div class="field">
+								<div class="control">
+									<button id="submit-button" type="submit" class="button is-primary">Generate</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</form>
+			</section>
+			<section class="section">
+				<p>Copy and paste the below code into the Comments section of the ID3 metadata pane in Audition:</p>
+				<code id="output"></code>
+			</section>
+		</div>
+		<script>
+			var formSubmit = () => {
+				var output = '';
+				var obj = {};
+				var out = document.querySelector('#output');
+				obj["slot1"] = 0;
+				obj["slot2"] = 0;
+				Array.from(document.querySelectorAll('input')).forEach( (item) => {
+					var arr = item.name.split('-');
+					var val = 0;
+					if ( item.value !== '' ) {
+						val = parseInt(item.value);
+					}
+					if ( arr[0] == 'hours' ) {
+						obj["slot" + arr[1]] += val * 3600000;
+					} else if ( arr[0] == 'minutes' ) {
+						obj["slot" + arr[1]] += val * 60000;
+					} else if ( arr[0] == 'seconds' ) {
+						obj["slot" + arr[1]] += val * 1000;
+					} else if ( arr[0] == 'milliseconds' ) {
+						obj["slot" + arr[1]] += val
+					}
+				});
+				if ( obj["slot1"] > 0 ) {
+					output += 'AIS_AD_BREAK_1=' + obj["slot1"] + ',0;';
+				}
+				if ( obj["slot2"] > 0 ) {
+					output += 'AIS_AD_BREAK_2=' + obj["slot2"] + ',0;';
+				}
+				out.innerHTML = output;
+			};
+		</script>
+	</body>
+</html>
